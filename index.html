@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Savvy</title>
+    <title>Savvy | Zen Finance</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css" />
@@ -19,7 +19,7 @@
     <div id="login-screen" class="login-wrapper">
         <div class="glass-card login-card pop-in">
             <h1 class="brand-title">Savvy<span class="dot">.</span></h1>
-            <p class="brand-subtitle">Savings done simple.</p>
+            <p class="brand-subtitle">Master your limit.</p>
             
             <form id="login-form">
                 <div class="floating-input">
@@ -40,7 +40,6 @@
     </div>
 
     <div id="app-screen" class="app-wrapper hidden">
-        
         <nav class="nav-bar slide-down">
             <div class="logo-pill">Savvy.</div>
             <div class="user-controls">
@@ -53,9 +52,7 @@
         </nav>
 
         <main class="dashboard-grid">
-            
             <section class="core-section">
-                
                 <div class="stats-row stagger-1">
                     <div class="stat-card hover-scale">
                         <div class="icon-bubble income-icon"><i class="fas fa-arrow-down"></i></div>
@@ -67,7 +64,7 @@
                     <div class="stat-card hover-scale">
                         <div class="icon-bubble expense-icon"><i class="fas fa-fire"></i></div>
                         <div>
-                            <small>Spent</small>
+                            <small>Spent (Exp+Bills)</small>
                             <h2 id="money-minus" class="text-red">-₹0</h2>
                         </div>
                     </div>
@@ -82,7 +79,6 @@
                         <h1 id="budget-display" class="hero-amount">Set Limit</h1>
                         <span id="budget-status" class="status-pill">--</span>
                     </div>
-                    
                     <div class="budget-track-large">
                         <div id="budget-bar" class="budget-fill-large" style="width: 0%"></div>
                     </div>
@@ -99,7 +95,6 @@
             </section>
 
             <section class="action-section">
-                
                 <div class="glass-panel form-panel pop-in stagger-4">
                     <h3>New Entry</h3>
                     <form id="form">
@@ -107,6 +102,9 @@
                             <input type="radio" id="type-exp" name="type" value="expense" checked>
                             <label for="type-exp">Expense</label>
                             
+                            <input type="radio" id="type-bill" name="type" value="bill">
+                            <label for="type-bill">Bill</label>
+
                             <input type="radio" id="type-inc" name="type" value="income">
                             <label for="type-inc">Income</label>
                             
@@ -119,19 +117,11 @@
                         </div>
                         
                         <div class="input-grid">
-                            <select id="category" class="zen-input">
-                                <option value="Food">Food 🍔</option>
-                                <option value="Rent">Rent 🏠</option>
-                                <option value="Transport">Travel 🚖</option>
-                                <option value="Entertainment">Fun 🎉</option>
-                                <option value="Shopping">Shop 🛍️</option>
-                                <option value="Health">Health 💊</option>
-                                <option value="Investment">Invest 📈</option>
-                            </select>
+                            <select id="category" class="zen-input"></select>
                             <input type="date" id="date" class="zen-input" required />
                         </div>
                         
-                        <button class="btn-action hover-lift"><i class="fas fa-plus"></i> Add Transaction</button>
+                        <button class="btn-action hover-lift"><i class="fas fa-plus"></i> Add Entry</button>
                     </form>
                 </div>
 
@@ -147,10 +137,8 @@
                     </div>
                 </div>
             </section>
-
         </main>
     </div>
-
     <script type="module" src="script.js"></script>
 </body>
 </html>
