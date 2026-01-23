@@ -3,8 +3,14 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>Savvy</title>
+    <title>Savvy | Pro</title>
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="style.css" />
 </head>
@@ -15,12 +21,12 @@
         <div class="blob blob-1"></div>
         <div class="blob blob-2"></div>
     </div>
+    <div id="toast"></div>
 
     <div id="login-screen" class="login-wrapper">
         <div class="glass-card login-card pop-in">
             <h1 class="brand-title">Savvy<span class="dot">.</span></h1>
-            <p class="brand-subtitle">Savings made easy.</p>
-            
+            <p class="brand-subtitle">Financial clarity.</p>
             <form id="login-form">
                 <div class="floating-input">
                     <input type="text" id="username" placeholder=" " required />
@@ -29,12 +35,11 @@
                 <div class="floating-input">
                     <input type="password" id="password" placeholder=" " required />
                     <label>Password</label>
+                    <i class="fas fa-eye password-toggle" id="toggle-password"></i>
                 </div>
                 <button class="btn-primary hover-lift" type="submit">
-                    <span>Login / Register</span>
-                    <i class="fas fa-arrow-right"></i>
+                    <span>Login</span> <i class="fas fa-arrow-right"></i>
                 </button>
-                <p id="login-error" class="error-msg hidden"></p>
             </form>
         </div>
     </div>
@@ -44,96 +49,104 @@
             <div class="logo-pill">Savvy.</div>
             <div class="user-controls">
                 <span id="welcome-msg" class="user-name">User</span>
-                <button class="logout-btn-styled" onclick="logout()">
-                    <span>Logout</span>
-                    <i class="fas fa-sign-out-alt"></i>
-                </button>
+                <button class="logout-btn-styled" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button>
             </div>
         </nav>
 
         <main class="dashboard-grid">
-            <section class="core-section">
-                <div class="stats-row stagger-1">
-                    <div class="stat-card hover-scale">
-                        <div class="icon-bubble income-icon"><i class="fas fa-arrow-down"></i></div>
-                        <div>
-                            <small>Income</small>
-                            <h2 id="money-plus" class="text-green">+₹0</h2>
-                        </div>
-                    </div>
-                    <div class="stat-card hover-scale">
-                        <div class="icon-bubble expense-icon"><i class="fas fa-fire"></i></div>
-                        <div>
-                            <small>Spent (Exp+Bills)</small>
-                            <h2 id="money-minus" class="text-red">-₹0</h2>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="hero-card pop-in stagger-2" onclick="setBudget()">
-                    <div class="hero-header">
-                        <span>Monthly Limit</span>
-                        <i class="fas fa-pen-to-square edit-icon"></i>
-                    </div>
-                    <div class="budget-flex">
-                        <h1 id="budget-display" class="hero-amount">Set Limit</h1>
-                        <span id="budget-status" class="status-pill">--</span>
-                    </div>
-                    <div class="budget-track-large">
-                        <div id="budget-bar" class="budget-fill-large" style="width: 0%"></div>
-                    </div>
-                </div>
-
-                <div class="glass-panel chart-panel pop-in stagger-3">
-                    <div class="chart-wrapper">
-                        <canvas id="expense-chart"></canvas>
-                        <div class="chart-center-text">
-                            <span>Flow</span>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
             <section class="action-section">
-                <div class="glass-panel form-panel pop-in stagger-4">
+                <div class="glass-panel form-panel pop-in stagger-1">
                     <h3>New Entry</h3>
                     <form id="form">
+                        <input type="hidden" id="edit-id">
                         <div class="switch-toggle">
                             <input type="radio" id="type-exp" name="type" value="expense" checked>
                             <label for="type-exp">Expense</label>
-                            
                             <input type="radio" id="type-bill" name="type" value="bill">
                             <label for="type-bill">Bill</label>
-
                             <input type="radio" id="type-inc" name="type" value="income">
                             <label for="type-inc">Income</label>
-                            
                             <div class="toggle-slider"></div>
                         </div>
-
                         <div class="input-grid">
                             <input type="text" id="text" placeholder="Description" class="zen-input" />
                             <input type="number" id="amount" placeholder="₹ Amount" class="zen-input" />
                         </div>
-                        
                         <div class="input-grid">
                             <select id="category" class="zen-input"></select>
                             <input type="date" id="date" class="zen-input" required />
                         </div>
-                        
-                        <button class="btn-action hover-lift"><i class="fas fa-plus"></i> Add Entry</button>
+                        <div class="btn-group">
+                            <button type="button" id="voice-btn" class="btn-action" style="width:60px; background:#333;"><i class="fas fa-microphone"></i></button>
+                            <button type="submit" id="submit-btn" class="btn-action hover-lift"><i class="fas fa-plus"></i> Add Entry</button>
+                            <button type="button" id="cancel-btn" class="btn-secondary hidden" onclick="resetForm()">Cancel</button>
+                        </div>
                     </form>
                 </div>
 
-                <div class="history-feed pop-in stagger-5">
+                <div class="history-feed pop-in stagger-2">
                     <div class="feed-header">
-                        <h3>Transactions</h3>
-                        <button class="icon-btn" onclick="exportData()"><i class="fas fa-download"></i></button>
+                        <h3>History</h3>
+                        <div class="header-actions">
+                            <button id="filter-icon-btn" class="icon-btn" onclick="toggleFilters()"><i class="fas fa-filter"></i></button>
+                            <button class="icon-btn" onclick="printReport()"><i class="fas fa-print"></i></button>
+                            <button class="icon-btn" onclick="exportReport()"><i class="fas fa-file-download"></i></button>
+                        </div>
+                    </div>
+                    <div id="filter-panel" class="filter-panel hidden">
+                        <div class="filter-group"><label>From</label><input type="date" id="filter-date-start" class="mini-input"></div>
+                        <div class="filter-group"><label>To</label><input type="date" id="filter-date-end" class="mini-input"></div>
+                        <select id="filter-category" class="mini-input full-width-mobile"><option value="all">All Categories</option></select>
+                        <select id="filter-type" class="mini-input full-width-mobile">
+                            <option value="all">All Types</option><option value="income">Income</option><option value="expense">Expense</option><option value="bill">Bill</option>
+                        </select>
+                        <div class="filter-actions">
+                            <button onclick="applyFilters()" class="btn-xs">Apply</button>
+                            <button onclick="clearFilters()" class="btn-xs btn-outline">Clear</button>
+                        </div>
                     </div>
                     <ul id="list" class="transaction-list"></ul>
-                    <div id="empty-msg" class="empty-state">
-                        <i class="fas fa-leaf"></i>
-                        <p>No activity yet.</p>
+                    <div id="empty-msg" class="empty-state"><i class="fas fa-leaf"></i><p>No transactions found.</p></div>
+                </div>
+            </section>
+
+            <section class="core-section">
+                <div class="stats-row stagger-3">
+                    <div class="stat-card hover-scale">
+                        <div class="icon-bubble income-icon"><i class="fas fa-arrow-down"></i></div>
+                        <div><small>Income</small><h2 id="money-plus" class="text-green count-up">0</h2></div>
+                    </div>
+                    <div class="stat-card hover-scale">
+                        <div class="icon-bubble expense-icon"><i class="fas fa-fire"></i></div>
+                        <div><small>Spent</small><h2 id="money-minus" class="text-red count-up">0</h2></div>
+                    </div>
+                    <div class="stat-card hover-scale">
+                        <div class="icon-bubble savings-icon"><i class="fas fa-piggy-bank"></i></div>
+                        <div><small>Balance</small><h2 id="balance-display" class="count-up">0</h2></div>
+                    </div>
+                </div>
+
+                <div class="hero-card pop-in stagger-4" onclick="setBudget()">
+                    <div class="hero-header"><span>Monthly Budget</span><i class="fas fa-pen-to-square"></i></div>
+                    <div class="budget-flex">
+                        <h1 id="budget-display" class="hero-amount">Set Limit</h1>
+                        <span id="budget-status" class="status-pill">--</span>
+                    </div>
+                    <div class="budget-track-large"><div id="budget-bar" class="budget-fill-large" style="width: 0%"></div></div>
+                    <small id="budget-warning" class="hidden warning-text"><i class="fas fa-exclamation-triangle"></i> 80% limit reached!</small>
+                </div>
+
+                <div class="stats-grid pop-in stagger-5">
+                    <div class="mini-stat hover-lift"><small>Daily Avg</small><h4 id="stat-daily">₹0</h4></div>
+                    <div id="stat-top-container" class="mini-stat hover-lift"><small>Top Category</small><h4 id="stat-top">--</h4></div>
+                </div>
+
+                <div class="charts-container pop-in stagger-6">
+                    <div class="chart-wrapper full-width">
+                        <canvas id="line-chart"></canvas>
+                    </div>
+                    <div class="chart-wrapper half-width centered">
+                        <canvas id="donut-chart"></canvas>
                     </div>
                 </div>
             </section>
