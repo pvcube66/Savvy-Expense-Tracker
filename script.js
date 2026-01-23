@@ -22,7 +22,7 @@ let filteredTransactions = [];
 let charts = { line: null, donut: null };
 let monthlyBudget = localStorage.getItem('monthlyBudget') || 0;
 
-// DOM ELEMENTS
+// DOM
 const els = {
     loginScreen: document.getElementById('login-screen'),
     appScreen: document.getElementById('app-screen'),
@@ -123,7 +123,7 @@ document.querySelectorAll('input[name="type"]').forEach(r => {
     r.addEventListener('change', (e) => updateCategoryOptions(e.target.value));
 });
 
-// UI & ANIMATIONS
+// UI UPDATES
 function updateUI() {
     const data = filteredTransactions;
     const amounts = data.map(t => t.amount);
@@ -131,16 +131,14 @@ function updateUI() {
     const exp = amounts.filter(x => x < 0).reduce((a, b) => a + b, 0) * -1;
     const bal = inc - exp;
 
-    // Animate Numbers
     animateValue(els.inc, `+${formatRupee(inc)}`);
     animateValue(els.exp, `-${formatRupee(exp)}`);
     animateValue(els.balance, formatRupee(bal));
 
-    // Budget Bar Animation
     if (monthlyBudget > 0) {
         const pct = (exp / monthlyBudget) * 100;
         els.budgetDisplay.innerText = formatRupee(monthlyBudget);
-        els.budgetBar.style.transition = 'none'; // Reset to animate again if needed
+        els.budgetBar.style.transition = 'none'; // Reset
         els.budgetBar.style.width = '0%';
         setTimeout(() => {
             els.budgetBar.style.transition = 'width 1.5s cubic-bezier(0.65, 0, 0.35, 1)';
@@ -152,7 +150,6 @@ function updateUI() {
         els.budgetBar.style.backgroundColor = pct > 100 ? '#C0392B' : (pct > 80 ? '#F39C12' : '#557C55');
     }
 
-    // Smart Stats
     if (els.fCat.value !== 'all') {
         els.statTopContainer.style.display = 'none';
     } else {
@@ -163,7 +160,6 @@ function updateUI() {
     }
     els.statDaily.innerText = formatRupee(exp / (new Date().getDate() || 1));
 
-    // List Animation
     els.list.innerHTML = '';
     if (!data.length) document.getElementById('empty-msg').style.display = 'block';
     else {
@@ -201,7 +197,7 @@ function renderCharts(data) {
         data: { labels: sortedDates, datasets: [{ 
             label: 'Spending', 
             data: sortedDates.map(d => dateMap[d]), 
-            borderColor: '#2E4A2E', // DARKER SAGE GREEN
+            borderColor: '#2E4A2E',
             backgroundColor: 'rgba(85, 124, 85, 0.1)',
             fill: true,
             tension: 0.4
@@ -312,16 +308,16 @@ window.exportReport = () => {
 function formatRupee(v) { return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v); }
 function showToast(msg, type) { els.toast.innerText = msg; els.toast.style.background = type === 'error' ? '#C0392B' : '#333'; els.toast.classList.add('show'); setTimeout(() => els.toast.classList.remove('show'), 3000); }
 
-// VOICE LOGIC (ANIMATED & SMART)
+// VOICE LOGIC
 if (window.SpeechRecognition || window.webkitSpeechRecognition) {
     const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
     recognition.lang = 'en-IN';
     
-    // Synonym Map (Full)
     const synonyms = {
         'food': { type: 'expense', cat: 'Food 🍔' }, 'burger': { type: 'expense', cat: 'Food 🍔' }, 'lunch': { type: 'expense', cat: 'Food 🍔' }, 'dinner': { type: 'expense', cat: 'Food 🍔' },
         'rent': { type: 'bill', cat: 'Rent 🏠' }, 'house': { type: 'bill', cat: 'Rent 🏠' },
-        'cab': { type: 'expense', cat: 'Transport 🚖' }, 'uber': { type: 'expense', cat: 'Transport 🚖' }, 'petrol': { type: 'expense', cat: 'Transport 🚖' }, 'diesel': { type: 'expense', cat: 'Transport 🚖' }, 'vehicle': { type: 'expense', cat: 'Transport 🚖' }, 'fuel': { type: 'expense', cat: 'Transport 🚖' },
+        'cab': { type: 'expense', cat: 'Transport 🚖' }, 'uber': { type: 'expense', cat: 'Transport 🚖' }, 
+        'petrol': { type: 'expense', cat: 'Transport 🚖' }, 'diesel': { type: 'expense', cat: 'Transport 🚖' }, 'vehicle': { type: 'expense', cat: 'Transport 🚖' }, 'fuel': { type: 'expense', cat: 'Transport 🚖' },
         'salary': { type: 'income', cat: 'Salary 💰' }, 'money': { type: 'income', cat: 'Salary 💰' },
         'phone': { type: 'bill', cat: 'Phone 📱' }, 'recharge': { type: 'bill', cat: 'Phone 📱' },
         'shopping': { type: 'expense', cat: 'Shopping 🛍️' }, 'clothes': { type: 'expense', cat: 'Shopping 🛍️' }, 'buy': { type: 'expense', cat: 'Shopping 🛍️' }, 'bought': { type: 'expense', cat: 'Shopping 🛍️' }, 'mall': { type: 'expense', cat: 'Shopping 🛍️' }, 'store': { type: 'expense', cat: 'Shopping 🛍️' },
@@ -330,10 +326,7 @@ if (window.SpeechRecognition || window.webkitSpeechRecognition) {
         'doctor': { type: 'expense', cat: 'Health 💊' }, 'medicine': { type: 'expense', cat: 'Health 💊' }, 'hospital': { type: 'expense', cat: 'Health 💊' }
     };
 
-    els.voiceBtn.addEventListener('click', () => { 
-        recognition.start(); 
-        els.voiceBtn.classList.add('voice-active'); 
-    });
+    els.voiceBtn.addEventListener('click', () => { recognition.start(); els.voiceBtn.classList.add('voice-active'); });
 
     recognition.onresult = (e) => {
         const cmd = e.results[0][0].transcript.toLowerCase();
