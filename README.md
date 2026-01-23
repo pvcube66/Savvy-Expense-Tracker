@@ -54,5 +54,5 @@ You need a code editor (VS Code) and a Google Firebase project.
 
 ### 1. Clone the Repository
 ```bash
-git clone [https://github.com/yourusername/savvy-tracker.git](https://github.com/yourusername/savvy-tracker.git)
+git clone [https://https://github.com/sushaaanthh/Savvy-Expense-Tracker.git](https://https://github.com/sushaaanthh/Savvy-Expense-Tracker.git)
 cd savvy-tracker
