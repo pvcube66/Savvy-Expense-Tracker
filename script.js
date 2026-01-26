@@ -83,15 +83,40 @@ els.passToggle.addEventListener('click', () => {
 
 document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const email = document.getElementById('username').value.trim() + "@savvy.com";
+    
+    // FIX 1: Remove spaces from username to prevent "Invalid Email" error
+    const rawUsername = document.getElementById('username').value.trim();
+    const cleanUsername = rawUsername.replace(/\s+/g, ''); // Removes all spaces
+    const email = cleanUsername + "@savvy.com";
+    
     const pass = els.passInput.value.trim();
-    if(pass.length < 6) return showToast("Password too short", "error");
-    try { await signInWithEmailAndPassword(auth, email, pass); }
+    if(pass.length < 6) return showToast("Password too short (min 6 chars)", "error");
+
+    try { 
+        await signInWithEmailAndPassword(auth, email, pass); 
+    }
     catch (err) {
-        if(err.code.includes('user-not-found')) {
-             try { await createUserWithEmailAndPassword(auth, email, pass); } 
-             catch (regErr) { showToast(regErr.message, "error"); }
-        } else { showToast("Login failed", "error"); }
+        // FIX 2: Log the exact error code to Console for debugging
+        console.error("Login Error:", err.code, err.message);
+
+        if(err.code.includes('user-not-found') || err.code.includes('invalid-credential')) {
+             try { 
+                 await createUserWithEmailAndPassword(auth, email, pass); 
+                 showToast("Account created!", "success");
+             } 
+             catch (regErr) { 
+                 console.error("Registration Error:", regErr.code);
+                 if (regErr.code === 'auth/email-already-in-use') {
+                    showToast("User exists. Wrong password?", "error");
+                 } else {
+                    showToast(regErr.message, "error"); 
+                 }
+             }
+        } else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-login-credentials') {
+            showToast("Wrong password for this user.", "error");
+        } else { 
+            showToast("Login failed: " + err.code, "error"); 
+        }
     }
 });
 
@@ -138,7 +163,7 @@ function updateUI() {
     if (monthlyBudget > 0) {
         const pct = (exp / monthlyBudget) * 100;
         els.budgetDisplay.innerText = formatRupee(monthlyBudget);
-        els.budgetBar.style.transition = 'none'; // Reset
+        els.budgetBar.style.transition = 'none';
         els.budgetBar.style.width = '0%';
         setTimeout(() => {
             els.budgetBar.style.transition = 'width 1.5s cubic-bezier(0.65, 0, 0.35, 1)';
@@ -182,7 +207,7 @@ function updateUI() {
 
 function animateValue(obj, val) { obj.innerText = val; }
 
-// CHARTS (DARKER SAGE)
+// CHARTS
 function renderCharts(data) {
     const dateMap = {};
     data.filter(t => t.amount < 0).forEach(t => { dateMap[t.date] = (dateMap[t.date] || 0) + Math.abs(t.amount); });
@@ -326,7 +351,10 @@ if (window.SpeechRecognition || window.webkitSpeechRecognition) {
         'doctor': { type: 'expense', cat: 'Health 💊' }, 'medicine': { type: 'expense', cat: 'Health 💊' }, 'hospital': { type: 'expense', cat: 'Health 💊' }
     };
 
-    els.voiceBtn.addEventListener('click', () => { recognition.start(); els.voiceBtn.classList.add('voice-active'); });
+    els.voiceBtn.addEventListener('click', () => { 
+        recognition.start(); 
+        els.voiceBtn.classList.add('voice-active'); 
+    });
 
     recognition.onresult = (e) => {
         const cmd = e.results[0][0].transcript.toLowerCase();
