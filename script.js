@@ -3,15 +3,15 @@ import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, on
 import { getFirestore, collection, addDoc, onSnapshot, query, where, deleteDoc, doc, updateDoc, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // --- SECURE CONFIGURATION (Vite) ---
-// These values are pulled from your local .env file
+// Keys are pulled from the hidden .env file
 const firebaseConfig = {
-    apiKey: "AIzaSyBEySSLpXQH2VW_YtFGKYo_ahiPkotS0VU",
-    authDomain: "savvy-tracker-d97d9.firebaseapp.com",
-    projectId: "savvy-tracker-d97d9",
-    storageBucket: "savvy-tracker-d97d9.firebasestorage.app",
-    messagingSenderId: "533272468228",
-    appId: "1:533272468228:web:20f38c93b747e07121ce51",
-    measurementId: "G-Y0W400VL63"
+    apiKey: import.meta.env.VITE_API_KEY,
+    authDomain: import.meta.env.VITE_AUTH_DOMAIN,
+    projectId: import.meta.env.VITE_PROJECT_ID,
+    storageBucket: import.meta.env.VITE_STORAGE_BUCKET,
+    messagingSenderId: import.meta.env.VITE_SENDER_ID,
+    appId: import.meta.env.VITE_APP_ID,
+    measurementId: import.meta.env.VITE_MEASUREMENT_ID
 };
 
 const app = initializeApp(firebaseConfig);
@@ -24,7 +24,7 @@ let filteredTransactions = [];
 let charts = { line: null, donut: null };
 let monthlyBudget = localStorage.getItem('monthlyBudget') || 0;
 
-// DOM ELEMENTS
+// DOM
 const els = {
     landingScreen: document.getElementById('landing-screen'),
     loginScreen: document.getElementById('login-screen'),
@@ -64,12 +64,9 @@ const catOptions = {
     income: ["Salary 💰", "Investment 📈", "Freelance 💻", "Gift 🎁"]
 };
 
-// --- AUTH & NAVIGATION LOGIC ---
-
-// 1. Check Auth Status on Load
+// --- AUTH & NAVIGATION ---
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // User is logged in -> Go to App
         document.getElementById('welcome-msg').innerText = user.email.split('@')[0];
         els.landingScreen.classList.add('hidden');
         els.loginScreen.classList.add('hidden');
@@ -77,24 +74,14 @@ onAuthStateChanged(auth, (user) => {
         loadTransactions(user.uid);
         updateCategoryOptions('expense');
     } else {
-        // User is NOT logged in -> Show Landing Page
         els.appScreen.classList.add('hidden');
         els.loginScreen.classList.add('hidden');
         els.landingScreen.classList.remove('hidden');
     }
 });
 
-// 2. Navigation Functions (Attached to Window for HTML access)
-window.goToLogin = () => {
-    els.landingScreen.classList.add('hidden');
-    els.loginScreen.classList.remove('hidden');
-};
-
-window.goBackToLanding = () => {
-    els.loginScreen.classList.add('hidden');
-    els.landingScreen.classList.remove('hidden');
-};
-
+window.goToLogin = () => { els.landingScreen.classList.add('hidden'); els.loginScreen.classList.remove('hidden'); };
+window.goBackToLanding = () => { els.loginScreen.classList.add('hidden'); els.landingScreen.classList.remove('hidden'); };
 window.logout = () => signOut(auth);
 
 // --- LOGIN LOGIC ---
@@ -106,40 +93,26 @@ els.passToggle.addEventListener('click', () => {
 
 document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    
-    // FIX: Remove spaces from username to prevent "Invalid Email" error
     const rawUsername = document.getElementById('username').value.trim();
-    const cleanUsername = rawUsername.replace(/\s+/g, ''); 
+    const cleanUsername = rawUsername.replace(/\s+/g, '');
     const email = cleanUsername + "@savvy.com";
-    
     const pass = els.passInput.value.trim();
 
     if(pass.length < 6) return showToast("Password too short (min 6 chars)", "error");
 
-    try { 
-        await signInWithEmailAndPassword(auth, email, pass); 
-    }
+    try { await signInWithEmailAndPassword(auth, email, pass); }
     catch (err) {
-        console.error("Login Error:", err.code, err.message);
-
         if(err.code.includes('user-not-found') || err.code.includes('invalid-credential')) {
              try { 
                  await createUserWithEmailAndPassword(auth, email, pass); 
                  showToast("Account created!", "success");
-             } 
-             catch (regErr) { 
-                 console.error("Registration Error:", regErr.code);
-                 if (regErr.code === 'auth/email-already-in-use') {
-                    showToast("User exists. Wrong password?", "error");
-                 } else {
-                    showToast(regErr.message, "error"); 
-                 }
+             } catch (regErr) { 
+                 if (regErr.code === 'auth/email-already-in-use') showToast("User exists. Wrong password?", "error");
+                 else showToast(regErr.message, "error"); 
              }
-        } else if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-login-credentials') {
-            showToast("Wrong password for this user.", "error");
-        } else { 
-            showToast("Login failed: " + err.code, "error"); 
-        }
+        } else if (err.code === 'auth/wrong-password') {
+            showToast("Wrong password.", "error");
+        } else { showToast("Login failed.", "error"); }
     }
 });
 
@@ -186,12 +159,7 @@ function updateUI() {
     if (monthlyBudget > 0) {
         const pct = (exp / monthlyBudget) * 100;
         els.budgetDisplay.innerText = formatRupee(monthlyBudget);
-        els.budgetBar.style.transition = 'none';
-        els.budgetBar.style.width = '0%';
-        setTimeout(() => {
-            els.budgetBar.style.transition = 'width 1.5s cubic-bezier(0.65, 0, 0.35, 1)';
-            els.budgetBar.style.width = `${Math.min(pct, 100)}%`;
-        }, 50);
+        els.budgetBar.style.width = `${Math.min(pct, 100)}%`;
         els.budgetStatus.innerText = `${Math.round(pct)}% Used`;
         els.budgetWarning.classList.toggle('hidden', pct < 80);
         els.budgetBar.style.backgroundColor = pct > 100 ? '#C0392B' : (pct > 80 ? '#F39C12' : '#557C55');
@@ -257,7 +225,6 @@ function renderCharts(data) {
 
     const catMap = {};
     data.filter(t => t.amount < 0).forEach(t => { catMap[t.category] = (catMap[t.category] || 0) + Math.abs(t.amount); });
-    
     const ctxDonut = document.getElementById('donut-chart');
     charts.donut = new Chart(ctxDonut, {
         type: 'doughnut',
@@ -286,14 +253,10 @@ els.form.addEventListener('submit', async (e) => {
     const category = els.catSelect.value;
     const date = document.getElementById('date').value;
     const editId = els.editId.value;
-
     if (!text || !amountVal || !date) return alert("Fill all fields");
-
     let finalAmount = Math.abs(amountVal);
     if (type !== 'income') finalAmount = -finalAmount;
-
     const data = { uid: auth.currentUser.uid, text, amount: finalAmount, category, date, type };
-
     try {
         if (editId) await updateDoc(doc(db, "transactions", editId), data);
         else await addDoc(collection(db, "transactions"), data);
@@ -301,46 +264,22 @@ els.form.addEventListener('submit', async (e) => {
     } catch (err) { console.error(err); }
 });
 
-window.resetForm = () => {
-    els.form.reset();
-    els.editId.value = '';
-    els.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Add Entry';
-    els.cancelBtn.classList.add('hidden');
-};
-
+window.resetForm = () => { els.form.reset(); els.editId.value = ''; els.submitBtn.innerHTML = '<i class="fas fa-plus"></i> Add Entry'; els.cancelBtn.classList.add('hidden'); };
 window.editTransaction = (id) => {
-    const t = transactions.find(x => x.id === id);
-    if (!t) return;
-    document.getElementById('text').value = t.text;
-    document.getElementById('amount').value = Math.abs(t.amount);
-    document.getElementById('date').value = t.date;
-    els.editId.value = t.id;
-    document.querySelector(`input[value="${t.type}"]`).checked = true;
-    updateCategoryOptions(t.type);
-    els.catSelect.value = t.category;
-    els.submitBtn.innerHTML = '<i class="fas fa-check"></i> Update';
-    els.cancelBtn.classList.remove('hidden');
-    els.form.scrollIntoView({ behavior: 'smooth' });
+    const t = transactions.find(x => x.id === id); if (!t) return;
+    document.getElementById('text').value = t.text; document.getElementById('amount').value = Math.abs(t.amount); document.getElementById('date').value = t.date; els.editId.value = t.id;
+    document.querySelector(`input[value="${t.type}"]`).checked = true; updateCategoryOptions(t.type); els.catSelect.value = t.category; els.submitBtn.innerHTML = '<i class="fas fa-check"></i> Update'; els.cancelBtn.classList.remove('hidden'); els.form.scrollIntoView({ behavior: 'smooth' });
 };
-
-window.removeTransaction = async (id) => {
-    if (confirm("Delete this?")) await deleteDoc(doc(db, "transactions", id));
-};
-
+window.removeTransaction = async (id) => { if (confirm("Delete this?")) await deleteDoc(doc(db, "transactions", id)); };
 window.toggleFilters = () => els.filterPanel.classList.toggle('hidden');
 window.applyFilters = () => {
-    const start = els.fStart.value; const end = els.fEnd.value;
-    const cat = els.fCat.value; const type = els.fType.value;
+    const start = els.fStart.value; const end = els.fEnd.value; const cat = els.fCat.value; const type = els.fType.value;
     filteredTransactions = transactions.filter(t => {
         let match = true;
-        if (start && t.date < start) match = false;
-        if (end && t.date > end) match = false;
-        if (cat !== 'all' && t.category.split(' ')[0] !== cat.split(' ')[0]) match = false;
-        if (type !== 'all' && t.type !== type) match = false;
+        if (start && t.date < start) match = false; if (end && t.date > end) match = false;
+        if (cat !== 'all' && t.category.split(' ')[0] !== cat.split(' ')[0]) match = false; if (type !== 'all' && t.type !== type) match = false;
         return match;
-    });
-    els.filterBtn.classList.add('active-filter');
-    updateUI();
+    }); els.filterBtn.classList.add('active-filter'); updateUI();
 };
 window.clearFilters = () => { els.fStart.value=''; els.fEnd.value=''; els.fCat.value='all'; els.fType.value='all'; filteredTransactions=[...transactions]; els.filterBtn.classList.remove('active-filter'); updateUI(); };
 window.setBudget = () => { const v = prompt("Limit (₹):", monthlyBudget); if(v){monthlyBudget=+v; localStorage.setItem('monthlyBudget',v); updateUI();} };
@@ -353,37 +292,13 @@ window.exportReport = () => {
 function formatRupee(v) { return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(v); }
 function showToast(msg, type) { els.toast.innerText = msg; els.toast.style.background = type === 'error' ? '#C0392B' : '#333'; els.toast.classList.add('show'); setTimeout(() => els.toast.classList.remove('show'), 3000); }
 
-// VOICE LOGIC
 if (window.SpeechRecognition || window.webkitSpeechRecognition) {
-    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-    recognition.lang = 'en-IN';
-    const synonyms = {
-        'food': { type: 'expense', cat: 'Food 🍔' }, 'burger': { type: 'expense', cat: 'Food 🍔' }, 'lunch': { type: 'expense', cat: 'Food 🍔' }, 'dinner': { type: 'expense', cat: 'Food 🍔' },
-        'rent': { type: 'bill', cat: 'Rent 🏠' }, 'house': { type: 'bill', cat: 'Rent 🏠' },
-        'cab': { type: 'expense', cat: 'Transport 🚖' }, 'uber': { type: 'expense', cat: 'Transport 🚖' }, 
-        'petrol': { type: 'expense', cat: 'Transport 🚖' }, 'diesel': { type: 'expense', cat: 'Transport 🚖' }, 'vehicle': { type: 'expense', cat: 'Transport 🚖' }, 'fuel': { type: 'expense', cat: 'Transport 🚖' },
-        'salary': { type: 'income', cat: 'Salary 💰' }, 'money': { type: 'income', cat: 'Salary 💰' },
-        'phone': { type: 'bill', cat: 'Phone 📱' }, 'recharge': { type: 'bill', cat: 'Phone 📱' },
-        'shopping': { type: 'expense', cat: 'Shopping 🛍️' }, 'clothes': { type: 'expense', cat: 'Shopping 🛍️' }, 'buy': { type: 'expense', cat: 'Shopping 🛍️' }, 'bought': { type: 'expense', cat: 'Shopping 🛍️' }, 'mall': { type: 'expense', cat: 'Shopping 🛍️' }, 'store': { type: 'expense', cat: 'Shopping 🛍️' },
-        'movie': { type: 'expense', cat: 'Entertainment 🎉' }, 'film': { type: 'expense', cat: 'Entertainment 🎉' }, 'cinema': { type: 'expense', cat: 'Entertainment 🎉' },
-        'school': { type: 'expense', cat: 'Education 📚' }, 'college': { type: 'expense', cat: 'Education 📚' }, 'tuition': { type: 'expense', cat: 'Education 📚' },
-        'doctor': { type: 'expense', cat: 'Health 💊' }, 'medicine': { type: 'expense', cat: 'Health 💊' }, 'hospital': { type: 'expense', cat: 'Health 💊' }
-    };
+    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)(); recognition.lang = 'en-IN';
+    const synonyms = { 'food': { type: 'expense', cat: 'Food 🍔' }, 'burger': { type: 'expense', cat: 'Food 🍔' }, 'lunch': { type: 'expense', cat: 'Food 🍔' }, 'dinner': { type: 'expense', cat: 'Food 🍔' }, 'rent': { type: 'bill', cat: 'Rent 🏠' }, 'house': { type: 'bill', cat: 'Rent 🏠' }, 'cab': { type: 'expense', cat: 'Transport 🚖' }, 'uber': { type: 'expense', cat: 'Transport 🚖' }, 'petrol': { type: 'expense', cat: 'Transport 🚖' }, 'diesel': { type: 'expense', cat: 'Transport 🚖' }, 'vehicle': { type: 'expense', cat: 'Transport 🚖' }, 'fuel': { type: 'expense', cat: 'Transport 🚖' }, 'salary': { type: 'income', cat: 'Salary 💰' }, 'money': { type: 'income', cat: 'Salary 💰' }, 'phone': { type: 'bill', cat: 'Phone 📱' }, 'recharge': { type: 'bill', cat: 'Phone 📱' }, 'shopping': { type: 'expense', cat: 'Shopping 🛍️' }, 'clothes': { type: 'expense', cat: 'Shopping 🛍️' }, 'buy': { type: 'expense', cat: 'Shopping 🛍️' }, 'bought': { type: 'expense', cat: 'Shopping 🛍️' }, 'mall': { type: 'expense', cat: 'Shopping 🛍️' }, 'store': { type: 'expense', cat: 'Shopping 🛍️' }, 'movie': { type: 'expense', cat: 'Entertainment 🎉' }, 'film': { type: 'expense', cat: 'Entertainment 🎉' }, 'cinema': { type: 'expense', cat: 'Entertainment 🎉' }, 'school': { type: 'expense', cat: 'Education 📚' }, 'college': { type: 'expense', cat: 'Education 📚' }, 'tuition': { type: 'expense', cat: 'Education 📚' }, 'doctor': { type: 'expense', cat: 'Health 💊' }, 'medicine': { type: 'expense', cat: 'Health 💊' }, 'hospital': { type: 'expense', cat: 'Health 💊' } };
     els.voiceBtn.addEventListener('click', () => { recognition.start(); els.voiceBtn.classList.add('voice-active'); });
     recognition.onresult = (e) => {
-        const cmd = e.results[0][0].transcript.toLowerCase();
-        const amt = cmd.match(/(\d+)/);
-        if (amt) document.getElementById('amount').value = amt[0];
-        for (const [key, val] of Object.entries(synonyms)) {
-            if (cmd.includes(key)) {
-                const radio = document.querySelector(`input[value="${val.type}"]`);
-                radio.checked = true; radio.dispatchEvent(new Event('change')); 
-                setTimeout(() => { els.catSelect.value = val.cat; }, 50);
-                break;
-            }
-        }
-        document.getElementById('text').value = cmd.charAt(0).toUpperCase() + cmd.slice(1);
-        els.voiceBtn.classList.remove('voice-active');
-    };
-    recognition.onerror = () => { els.voiceBtn.classList.remove('voice-active'); };
+        const cmd = e.results[0][0].transcript.toLowerCase(); const amt = cmd.match(/(\d+)/); if (amt) document.getElementById('amount').value = amt[0];
+        for (const [key, val] of Object.entries(synonyms)) { if (cmd.includes(key)) { const radio = document.querySelector(`input[value="${val.type}"]`); radio.checked = true; radio.dispatchEvent(new Event('change')); setTimeout(() => { els.catSelect.value = val.cat; }, 50); break; } }
+        document.getElementById('text').value = cmd.charAt(0).toUpperCase() + cmd.slice(1); els.voiceBtn.classList.remove('voice-active');
+    }; recognition.onerror = () => { els.voiceBtn.classList.remove('voice-active'); };
 }
